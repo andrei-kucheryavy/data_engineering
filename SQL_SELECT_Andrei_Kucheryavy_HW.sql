@@ -30,7 +30,7 @@ select concat(a.address, ' ', a.address2) as full_adress,
     on st.staff_id = p.staff_id
     where p.payment_date >= '2017-03-01'
 	group by a.address, a.address2
-	order by revenue desc
+	order by revenue DESC
 
 /*•	Top-5 actors by number of movies (released since 2015) they took part in (columns: first_name, last_name, number_of_movies, sorted by number_of_movies in descending order)
 */ 
@@ -47,10 +47,34 @@ order by number_of_movies DESC
 limit 5
 
 
-/*•	Number of Drama, Travel, Documentary per year (columns: release_year, number_of_drama_movies, number_of_travel_movies, number_of_documentary_movies), sorted by release year in descending order. Dealing with NULL values is encouraged)
+/*•	Number of Drama, Travel, Documentary per year (columns: release_year, number_of_drama_movies, number_of_travel_movies, number_of_documentary_movies),
+sorted by release year in descending order. Dealing with NULL values is encouraged)
 */ 
+select f.release_year, 
+COUNT(case when c.name = 'Drama' then 1 end) as number_of_drama_movies, 
+COUNT(case when c.name = 'Travel' then 1 end) as number_of_travel_movies,
+COUNT(case when c.name = 'Documentary' then 1 end) as number_of_documentary_movies
+from film f 
+left join film_category fc on f.film_id = fc.film_id 
+left join category c on fc.category_id = c.category_id 
+where f.release_year is not null
+and c.name in ('Drama','Travel','Documentary')
+group by f.release_year  
+order by f.release_year DESC
 
-
-/*•	For each client, display a list of horrors that he had ever rented (in one column, separated by commas), and the amount of money that he paid for it
+/*•	For each client, display a list of horrors that he had ever rented (in one column, separated by commas), 
+and the amount of money that he paid for it
 */ 
-
+select c.first_name, c.last_name,
+f.title,
+SUM (p.amount) as total_amount_paid
+from customer c 
+inner join payment p on c.customer_id = p.customer_id 
+inner join rental r on p.rental_id = r.rental_id 
+inner join inventory i on r.inventory_id = i.inventory_id 
+inner join film f on i.film_id = f.film_id 
+inner join film_category fc on f.film_id = fc.film_id 
+inner join category c2 on fc.category_id = c2.category_id 
+where c2.name = 'Horror'
+group by c.first_name, c.last_name, f.title
+order by c.first_name, c.last_name
